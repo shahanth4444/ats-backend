@@ -1,4 +1,5 @@
 import { sequelize, Application, ApplicationHistory } from '../models';
+import { emailQueue } from '../worker';
 
 // 1. Define the Rules (State Machine)
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -42,6 +43,26 @@ export const changeStatus = async (appId: number, newStatus: string, userId: num
     await t.commit();
 
     console.log(`✅ Success! Moved App #${appId} to ${newStatus}`);
+
+    // 6. Send email notification to candidate (async, after commit)
+    try {
+      await emailQueue.add('send-email', {
+        type: 'status_changed',
+        applicationId: appId,
+        newStatus: newStatus
+      }, {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000
+        }
+      });
+      console.log(`📧 Email notification queued for application #${appId}`);
+    } catch (emailError: any) {
+      // Log error but don't fail the status change
+      console.error('Failed to queue email notification:', emailError.message);
+    }
+
     return app;
 
   } catch (error) {

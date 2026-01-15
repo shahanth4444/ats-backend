@@ -7,10 +7,11 @@ interface JobAttributes {
   description: string;
   status: string;
   recruiterId: number;
+  companyId: number;
 }
 
 // FIX IS HERE: We added 'status' to the list of optional fields
-interface JobCreationAttributes extends Optional<JobAttributes, 'id' | 'status'> {}
+interface JobCreationAttributes extends Optional<JobAttributes, 'id' | 'status'> { }
 
 export class Job extends Model<JobAttributes, JobCreationAttributes> {
   public id!: number;
@@ -18,6 +19,7 @@ export class Job extends Model<JobAttributes, JobCreationAttributes> {
   public description!: string;
   public status!: string;
   public recruiterId!: number;
+  public companyId!: number;
 }
 
 Job.init({
@@ -39,6 +41,10 @@ Job.init({
     defaultValue: 'open',
   },
   recruiterId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  companyId: {
     type: DataTypes.INTEGER,
     allowNull: false
   }

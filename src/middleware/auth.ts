@@ -1,11 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const SECRET_KEY = process.env.JWT_SECRET || 'super-secret-key';
+// Validate JWT_SECRET exists
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET environment variable is not defined. ' +
+    'This is required for secure token verification. ' +
+    'Please set JWT_SECRET in your .env file.'
+  );
+}
+
+const SECRET_KEY = process.env.JWT_SECRET;
 
 // Extend Express Request to include user data
 export interface AuthRequest extends Request {
-  user?: { id: number; role: string };
+  user?: { id: number; role: string; companyId?: number };
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -25,6 +34,30 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 export const requireRecruiter = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== 'recruiter') {
     return res.status(403).json({ error: 'Access denied: Recruiters only' });
+  }
+  next();
+};
+
+// Check if user is a Candidate
+export const requireCandidate = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'candidate') {
+    return res.status(403).json({ error: 'Access denied: Candidates only' });
+  }
+  next();
+};
+
+// Check if user is a Hiring Manager
+export const requireHiringManager = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'hiring_manager') {
+    return res.status(403).json({ error: 'Access denied: Hiring Managers only' });
+  }
+  next();
+};
+
+// Check if user is a Recruiter or Hiring Manager
+export const requireRecruiterOrHiringManager = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'recruiter' && req.user?.role !== 'hiring_manager') {
+    return res.status(403).json({ error: 'Access denied: Recruiters or Hiring Managers only' });
   }
   next();
 };

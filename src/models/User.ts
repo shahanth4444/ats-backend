@@ -7,15 +7,17 @@ interface UserAttributes {
   email: string;
   password?: string;
   role: string;
+  companyId?: number;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id'> { }
 
 export class User extends Model<UserAttributes, UserCreationAttributes> {
   public id!: number; // <--- THIS IS CRITICAL
   public name!: string;
   public email!: string;
   public role!: string;
+  public companyId?: number;
 }
 
 User.init({
@@ -40,6 +42,10 @@ User.init({
   role: {
     type: DataTypes.ENUM('candidate', 'recruiter', 'hiring_manager'),
     allowNull: false,
+  },
+  companyId: {
+    type: DataTypes.INTEGER,
+    allowNull: true, // Candidates may not have a company
   },
 }, {
   sequelize,
